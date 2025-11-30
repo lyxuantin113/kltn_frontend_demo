@@ -14,6 +14,7 @@ export type TaskAResult = {
   pred_label: string; // "c0", "c1", ..., "c9"
   suspicious: boolean;
   probs: Array<{ label: string; score: number }>;
+  boxes?: Array<{ box: number[]; label: string; conf: number }>;
 };
 
 export type TaskBResult = {
