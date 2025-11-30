@@ -34,12 +34,17 @@ export default function VideoRealtimeDemo() {
   const [playing, setPlaying] = useState(false);
   const [alertShown, setAlertShown] = useState(false);
   
+  // UI State
+  const [expandedVideoInfo, setExpandedVideoInfo] = useState(true);
+  const [expandedCurrentEvent, setExpandedCurrentEvent] = useState(true);
+  
   // Abort controller
   const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     checkHealth().then(setHealth).catch(() => {});
   }, []);
+  
 
   // Sound effect cho distraction (với debounce)
   const lastDistractionTime = useRef<number>(0);
@@ -396,21 +401,30 @@ export default function VideoRealtimeDemo() {
         {/* Metadata */}
         {metadata && (
           <div className="rounded-2xl border border-neutral-800 bg-neutral-900/60 p-4 mb-4">
-            <h3 className="text-lg font-semibold mb-3">Video Info</h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-neutral-400">Tổng frames:</span>
-                <span className="text-neutral-200">{metadata.total_frames}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-neutral-400">FPS:</span>
-                <span className="text-neutral-200">{metadata.fps.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-neutral-400">Events nhận được:</span>
-                <span className="text-neutral-200">{events.length}</span>
-              </div>
+            <div 
+              className="flex items-center justify-between cursor-pointer"
+              onClick={() => setExpandedVideoInfo(!expandedVideoInfo)}
+            >
+              <h3 className="text-lg font-semibold">Video Info</h3>
+              <span className="text-neutral-400">{expandedVideoInfo ? "▼" : "▶"}</span>
             </div>
+            
+            {expandedVideoInfo && (
+              <div className="space-y-2 text-sm mt-3">
+                <div className="flex justify-between">
+                  <span className="text-neutral-400">Tổng frames:</span>
+                  <span className="text-neutral-200">{metadata.total_frames}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-neutral-400">FPS:</span>
+                  <span className="text-neutral-200">{metadata.fps.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-neutral-400">Events nhận được:</span>
+                  <span className="text-neutral-200">{events.length}</span>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -440,62 +454,71 @@ export default function VideoRealtimeDemo() {
         {/* Current Event */}
         {currentEvent && (
           <div className="rounded-2xl border border-neutral-800 bg-neutral-900/60 p-4 mb-4">
-            <h3 className="text-lg font-semibold mb-3">
-              Event #{currentEventIdx + 1} / {events.length}
-            </h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-neutral-400">Frame:</span>
-                <span className="text-neutral-200">{currentEvent.frame_idx}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-neutral-400">Time:</span>
-                <span className="text-neutral-200">
-                  {currentEvent.time_s !== null && currentEvent.time_s !== undefined
-                    ? `${currentEvent.time_s.toFixed(2)}s`
-                    : "N/A"}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-neutral-400">Stage:</span>
-                <span className="text-neutral-200">{currentEvent.stage}</span>
-              </div>
-              
-              {currentEvent.taskA && (
-                <div className="mt-3 rounded-lg bg-white/5 p-2">
-                  <div className="text-xs font-semibold mb-1">Task A:</div>
-                  <div className="text-xs text-neutral-300">
-                    {currentEvent.taskA.pred_label} - {getTaskALabelDisplay(currentEvent.taskA.pred_label)} {currentEvent.taskA.suspicious ? "⚠️" : "✓"}
-                  </div>
+            <div 
+              className="flex items-center justify-between cursor-pointer"
+              onClick={() => setExpandedCurrentEvent(!expandedCurrentEvent)}
+            >
+              <h3 className="text-lg font-semibold">
+                Event #{currentEventIdx + 1} / {events.length}
+              </h3>
+              <span className="text-neutral-400">{expandedCurrentEvent ? "▼" : "▶"}</span>
+            </div>
+
+            {expandedCurrentEvent && (
+              <div className="space-y-2 text-sm mt-3">
+                <div className="flex justify-between">
+                  <span className="text-neutral-400">Frame:</span>
+                  <span className="text-neutral-200">{currentEvent.frame_idx}</span>
                 </div>
-              )}
-              
-              {currentEvent.taskB && (() => {
-                const isSuspicious = currentEvent.suspicious_B && !currentEvent.taskB.is_pos_thr;
-                const prob = currentEvent.taskB.prob_pos ?? 0;
-                const posClass = currentEvent.taskB.pos_class;
+                <div className="flex justify-between">
+                  <span className="text-neutral-400">Time:</span>
+                  <span className="text-neutral-200">
+                    {currentEvent.time_s !== null && currentEvent.time_s !== undefined
+                      ? `${currentEvent.time_s.toFixed(2)}s`
+                      : "N/A"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-neutral-400">Stage:</span>
+                  <span className="text-neutral-200">{currentEvent.stage}</span>
+                </div>
                 
-                return (
+                {currentEvent.taskA && (
                   <div className="mt-3 rounded-lg bg-white/5 p-2">
-                    <div className="text-xs font-semibold mb-1">Task B:</div>
-                    <div className={`text-xs ${
-                      currentEvent.taskB.is_pos_thr 
-                        ? "text-red-400 font-bold" 
-                        : isSuspicious 
-                        ? "text-yellow-300 font-semibold" 
-                        : "text-green-400"
-                    }`}>
-                      {posClass} ({prob.toFixed(4)})
-                      {currentEvent.taskB.is_pos_thr 
-                        ? <span className="ml-1">⚠️ PHÁT HIỆN</span> 
-                        : isSuspicious 
-                        ? <span className="ml-1">⚠️ Nghi vấn</span>
-                        : <span className="ml-1">✓ An toàn</span>}
+                    <div className="text-xs font-semibold mb-1">Task A:</div>
+                    <div className="text-xs text-neutral-300">
+                      {currentEvent.taskA.pred_label} - {getTaskALabelDisplay(currentEvent.taskA.pred_label)} {currentEvent.taskA.suspicious ? "⚠️" : "✓"}
                     </div>
                   </div>
-                );
-              })()}
-            </div>
+                )}
+                
+                {currentEvent.taskB && (() => {
+                  const isSuspicious = currentEvent.suspicious_B && !currentEvent.taskB.is_pos_thr;
+                  const prob = currentEvent.taskB.prob_pos ?? 0;
+                  const posClass = currentEvent.taskB.pos_class;
+                  
+                  return (
+                    <div className="mt-3 rounded-lg bg-white/5 p-2">
+                      <div className="text-xs font-semibold mb-1">Task B:</div>
+                      <div className={`text-xs ${
+                        currentEvent.taskB.is_pos_thr 
+                          ? "text-red-400 font-bold" 
+                          : isSuspicious 
+                          ? "text-yellow-300 font-semibold" 
+                          : "text-green-400"
+                      }`}>
+                        {posClass} ({prob.toFixed(4)})
+                        {currentEvent.taskB.is_pos_thr 
+                          ? <span className="ml-1">⚠️ PHÁT HIỆN</span> 
+                          : isSuspicious 
+                          ? <span className="ml-1">⚠️ Nghi vấn</span>
+                          : <span className="ml-1">✓ An toàn</span>}
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
           </div>
         )}
 
