@@ -262,8 +262,6 @@ export default function VideoRealtimeDemo() {
 
   return (
     <div>
-
-
         {/* Setup Dự đoán Block */}
         <div className="shadow-block my-4 rounded-sm border border-neutral-800 bg-neutral-900/60 p-4">
           <div 
