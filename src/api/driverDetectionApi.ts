@@ -188,6 +188,16 @@ export function predictVideoSSE(
     model_name_A?: string;
     run_taskB?: boolean;
     taskB_name?: string;
+    // New config params
+    stage1_stride?: number;
+    stage2_stride?: number;
+    taskA_suspicious_prob_thr?: number;
+    taskA_distraction_ratio?: number;
+    distraction_cooldown_seconds?: number;
+    yolo_conf?: number;
+    suspicious_window?: number;
+    suspicious_ratio?: number;
+    attack_cooldown_seconds?: number;
   } = {},
   onEvent: (event: StreamEvent) => void,
   onError?: (error: Error) => void
@@ -197,6 +207,15 @@ export function predictVideoSSE(
     model_name_A = "ResNet18",
     run_taskB = true,
     taskB_name = "custom_cabin_attack",
+    stage1_stride = 16,
+    stage2_stride = 4,
+    taskA_suspicious_prob_thr = 0.7,
+    taskA_distraction_ratio = 0.6,
+    distraction_cooldown_seconds = 3.0,
+    yolo_conf = 0.5,
+    suspicious_window = 5,
+    suspicious_ratio = 0.8,
+    attack_cooldown_seconds = 2.0,
   } = options;
 
   const formData = new FormData();
@@ -207,6 +226,17 @@ export function predictVideoSSE(
   params.append("model_name_A", model_name_A);
   params.append("run_taskB", String(run_taskB));
   params.append("taskB_name", taskB_name);
+
+  // Append new params
+  params.append("stage1_stride", String(stage1_stride));
+  params.append("stage2_stride", String(stage2_stride));
+  params.append("taskA_suspicious_prob_thr", String(taskA_suspicious_prob_thr));
+  params.append("taskA_distraction_ratio", String(taskA_distraction_ratio));
+  params.append("distraction_cooldown_seconds", String(distraction_cooldown_seconds));
+  params.append("yolo_conf", String(yolo_conf));
+  params.append("suspicious_window", String(suspicious_window));
+  params.append("suspicious_ratio", String(suspicious_ratio));
+  params.append("attack_cooldown_seconds", String(attack_cooldown_seconds));
 
   const url = `${API_URL}/predict_video_stream_sse?${params.toString()}`;
   const abortController = new AbortController();

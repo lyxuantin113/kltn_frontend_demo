@@ -36,9 +36,9 @@ export default function App() {
               <button
                 key={tab.id}
                 onClick={() => setSelectedIdx(idx)}
-                className={`px-4 py-2 mr-2 text-sm font-medium !rounded-none btn-hover-effect ${
+                className={`px-4 py-2 mr-2 text-sm font-medium !rounded-sm btn-hover-effect ${
                   selectedIdx === idx
-                    ? "border-b-2 border-blue-500 text-blue-400 shadow-blue-500 shadow-md"
+                    ? "border-b-2 !border-blue-500 text-blue-400 shadow-blue-500 shadow-md"
                     : "text-neutral-400 hover:text-neutral-200"
                 }`}
               >
@@ -49,9 +49,8 @@ export default function App() {
         </div>
 
         {/* Tab Description */}
-        <div className="mb-6 rounded-lg bg-neutral-900/60 border border-neutral-800 px-4 py-3">
+        <div className="mb-6 rounded-sm bg-neutral-900/60 border border-neutral-800 px-4 py-3">
           <p className="text-sm text-neutral-300">
-            <span className="font-semibold text-white">{TABS[selectedIdx].label}:</span>{" "}
             {TABS[selectedIdx].description}
           </p>
         </div>

@@ -23,6 +23,21 @@ export default function VideoRealtimeDemo() {
   const [runTaskB, setRunTaskB] = useState(true);
   const [taskBName, setTaskBName] = useState("custom_cabin_attack");
   
+  // Advanced Config State
+  const [stage1Stride, setStage1Stride] = useState(16);
+  const [stage2Stride, setStage2Stride] = useState(4);
+  
+  // Task A Config
+  const [taskASuspiciousProbThr, setTaskASuspiciousProbThr] = useState(0.7);
+  const [taskADistractionRatio, setTaskADistractionRatio] = useState(0.6);
+  const [distractionCooldown, setDistractionCooldown] = useState(3.0);
+  const [yoloConf, setYoloConf] = useState(0.5);
+  
+  // Task B Config
+  const [suspiciousWindow, setSuspiciousWindow] = useState(5);
+  const [suspiciousRatio, setSuspiciousRatio] = useState(0.8);
+  const [attackCooldown, setAttackCooldown] = useState(2.0);
+  
   // Stream data
   const [metadata, setMetadata] = useState<{ total_frames: number; fps: number } | null>(null);
   const [events, setEvents] = useState<StreamEvent[]>([]);
@@ -37,6 +52,8 @@ export default function VideoRealtimeDemo() {
   // UI State
   const [expandedVideoInfo, setExpandedVideoInfo] = useState(true);
   const [expandedCurrentEvent, setExpandedCurrentEvent] = useState(true);
+  const [expandedSetup, setExpandedSetup] = useState(true);
+  const [expandedOptions, setExpandedOptions] = useState(true);
   
   // Abort controller
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -142,6 +159,16 @@ export default function VideoRealtimeDemo() {
         model_name_A: taskAName, // Pass selected model name
         run_taskB: runTaskB,
         taskB_name: taskBName,
+        // Pass config params
+        stage1_stride: stage1Stride,
+        stage2_stride: stage2Stride,
+        taskA_suspicious_prob_thr: taskASuspiciousProbThr,
+        taskA_distraction_ratio: taskADistractionRatio,
+        distraction_cooldown_seconds: distractionCooldown,
+        yolo_conf: yoloConf,
+        suspicious_window: suspiciousWindow,
+        suspicious_ratio: suspiciousRatio,
+        attack_cooldown_seconds: attackCooldown,
       },
       (event: StreamEvent) => {
         if (event.type === "metadata") {
@@ -235,79 +262,238 @@ export default function VideoRealtimeDemo() {
 
   return (
     <div>
+
+
+        {/* Setup Dự đoán Block */}
+        <div className="shadow-block my-4 rounded-sm border border-neutral-800 bg-neutral-900/60 p-4">
+          <div 
+            className="flex items-center justify-between cursor-pointer border-b border-neutral-800 pb-2 mb-3"
+            onClick={() => setExpandedSetup(!expandedSetup)}
+          >
+            <h3 className="text-sm font-semibold text-neutral-300">
+              Setup Dự đoán
+            </h3>
+            <span className="text-neutral-400">{expandedSetup ? "▼" : "▶"}</span>
+          </div>
+          
+          {expandedSetup && (
+            <div className="space-y-4">
+              {/* Chung */}
+              <div>
+                <h4 className="text-xs font-medium text-blue-400 mb-2">Chung (Task A & B)</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-neutral-400 mb-1">Stage 1 Stride (Thưa)</label>
+                    <input 
+                      type="number" 
+                      value={stage1Stride}
+                      onChange={(e) => setStage1Stride(Number(e.target.value))}
+                      className="w-full bg-neutral-800 border border-neutral-700 rounded px-2 py-1 text-xs text-white"
+                      disabled={processing}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-neutral-400 mb-1">Stage 2 Stride (Dày)</label>
+                    <input 
+                      type="number" 
+                      value={stage2Stride}
+                      onChange={(e) => setStage2Stride(Number(e.target.value))}
+                      className="w-full bg-neutral-800 border border-neutral-700 rounded px-2 py-1 text-xs text-white"
+                      disabled={processing}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Task A */}
+              {runTaskA && (
+                <div>
+                  <h4 className="text-xs font-medium text-orange-400 mb-2">Task A (Mất tập trung)</h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-neutral-400 mb-1">Suspicious Prob Thr</label>
+                      <input 
+                        type="number" 
+                        step="0.1"
+                        value={taskASuspiciousProbThr}
+                        min="0"
+                        max="1"
+                        onChange={(e) => setTaskASuspiciousProbThr(Number(e.target.value))}
+                        className="w-full bg-neutral-800 border border-neutral-700 rounded px-2 py-1 text-xs text-white"
+                        disabled={processing}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-neutral-400 mb-1">Distraction Ratio</label>
+                      <input 
+                        type="number" 
+                        step="0.1"
+                        value={taskADistractionRatio}
+                        min="0"
+                        max="1"
+                        onChange={(e) => setTaskADistractionRatio(Number(e.target.value))}
+                        className="w-full bg-neutral-800 border border-neutral-700 rounded px-2 py-1 text-xs text-white"
+                        disabled={processing}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-neutral-400 mb-1">Cooldown (s)</label>
+                      <input 
+                        type="number" 
+                        step="0.5"
+                        value={distractionCooldown}
+                        onChange={(e) => setDistractionCooldown(Number(e.target.value))}
+                        className="w-full bg-neutral-800 border border-neutral-700 rounded px-2 py-1 text-xs text-white"
+                        disabled={processing}
+                      />
+                    </div>
+                    {taskAName.toLowerCase().includes("yolo") && (
+                      <div>
+                        <label className="block text-xs text-neutral-400 mb-1">YOLO Conf</label>
+                        <input 
+                          type="number" 
+                          step="0.05"
+                          value={yoloConf}
+                          onChange={(e) => setYoloConf(Number(e.target.value))}
+                          className="w-full bg-neutral-800 border border-neutral-700 rounded px-2 py-1 text-xs text-white"
+                          disabled={processing}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Task B */}
+              {runTaskB && (
+                <div>
+                  <h4 className="text-xs font-medium text-red-400 mb-2">Task B (Nguy hiểm / Tấn công)</h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-neutral-400 mb-1">Suspicious Window</label>
+                      <input 
+                        type="number" 
+                        value={suspiciousWindow}
+                        onChange={(e) => setSuspiciousWindow(Number(e.target.value))}
+                        className="w-full bg-neutral-800 border border-neutral-700 rounded px-2 py-1 text-xs text-white"
+                        disabled={processing}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-neutral-400 mb-1">Suspicious Ratio</label>
+                      <input 
+                        type="number" 
+                        step="0.1"
+                        value={suspiciousRatio}
+                        min="0"
+                        max="1"
+                        onChange={(e) => setSuspiciousRatio(Number(e.target.value))}
+                        className="w-full bg-neutral-800 border border-neutral-700 rounded px-2 py-1 text-xs text-white"
+                        disabled={processing}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-neutral-400 mb-1">Cooldown (s)</label>
+                      <input 
+                        type="number" 
+                        step="0.5"
+                        value={attackCooldown}
+                        onChange={(e) => setAttackCooldown(Number(e.target.value))}
+                        className="w-full bg-neutral-800 border border-neutral-700 rounded px-2 py-1 text-xs text-white"
+                        disabled={processing}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       {/* Options - Luôn hiển thị để user có thể chọn trước */}
-        <div className="mt-4 rounded-2xl border border-neutral-800 bg-neutral-900/60 p-4">
+      <div className="shadow-block my-4 rounded-sm border border-neutral-800 bg-neutral-900/60 p-4">
+        <div 
+          className="flex items-center justify-between cursor-pointer border-b border-neutral-800 pb-2 mb-3"
+          onClick={() => setExpandedOptions(!expandedOptions)}
+        >
+          <h3 className="text-sm font-semibold text-neutral-300">
+            Chọn mô hình
+          </h3>
+          <span className="text-neutral-400">{expandedOptions ? "▼" : "▶"}</span>
+        </div>
+        
+        {expandedOptions && (
           <div className="space-y-3">
             <div className="flex items-center gap-3">
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={runTaskA}
-                  onChange={(e) => setRunTaskA(e.target.checked)}
-                  className="rounded"
-                  disabled={processing}
-                />
-                <span>Task A (Mất tập trung)</span>
-              </label>
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={runTaskB}
-                  onChange={(e) => setRunTaskB(e.target.checked)}
-                  className="rounded"
-                  disabled={processing}
-                />
-                <span>Task B (Nguy hiểm)</span>
-              </label>
-            </div>
-            
-            {runTaskA && health && health.taskA_models.length > 0 && (
-              <div className="flex items-center gap-2 text-sm ml-6">
-                <span className="text-neutral-400">Task A Model:</span>
-                <select
-                  value={taskAName}
-                  onChange={(e) => setTaskAName(e.target.value)}
-                  className="rounded-lg bg-neutral-800 px-2 py-1 text-xs outline-none"
-                  disabled={processing}
-                >
-                  {health?.taskA_models.map((name) => (
-                    <option key={name} value={name}>
-                      {name}
-                    </option>
-                  ))}
-                </select>
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={runTaskA}
+                    onChange={(e) => setRunTaskA(e.target.checked)}
+                    className="rounded"
+                    disabled={processing}
+                  />
+                  <span>Task A (Mất tập trung)</span>
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={runTaskB}
+                    onChange={(e) => setRunTaskB(e.target.checked)}
+                    className="rounded"
+                    disabled={processing}
+                  />
+                  <span>Task B (Nguy hiểm)</span>
+                </label>
               </div>
-            )}
-
-            {runTaskB && (
-              <div className="flex items-center gap-2 text-sm ml-6">
-                <span className="text-neutral-400">Task B Model:</span>
-                {health && health.taskB_models.length > 0 ? (
+              
+              {runTaskA && health && health.taskA_models.length > 0 && (
+                <div className="flex items-center gap-2 text-sm ml-6">
+                  <span className="text-neutral-400">Task A Model:</span>
                   <select
-                    value={taskBName}
-                    onChange={(e) => setTaskBName(e.target.value)}
+                    value={taskAName}
+                    onChange={(e) => setTaskAName(e.target.value)}
                     className="rounded-lg bg-neutral-800 px-2 py-1 text-xs outline-none"
                     disabled={processing}
                   >
-                    {health.taskB_models.map((name) => (
+                    {health?.taskA_models.map((name) => (
                       <option key={name} value={name}>
                         {name}
                       </option>
                     ))}
                   </select>
-                ) : (
-                  <span className="text-xs text-neutral-500">
-                    {health ? "Không có model nào" : "Đang tải..."}
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
+                </div>
+              )}
+
+              {runTaskB && (
+                <div className="flex items-center gap-2 text-sm ml-6">
+                  <span className="text-neutral-400">Task B Model:</span>
+                  {health && health.taskB_models.length > 0 ? (
+                    <select
+                      value={taskBName}
+                      onChange={(e) => setTaskBName(e.target.value)}
+                      className="rounded-lg bg-neutral-800 px-2 py-1 text-xs outline-none"
+                      disabled={processing}
+                    >
+                      {health.taskB_models.map((name) => (
+                        <option key={name} value={name}>
+                          {name}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <span className="text-xs text-neutral-500">
+                      {health ? "Không có model nào" : "Đang tải..."}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
     <div className="grid grid-cols-12 gap-4">
       {/* LEFT: Video + Controls */}
       <div className="col-span-12 md:col-span-7">
-        <div className="relative rounded-2xl border border-neutral-800 bg-neutral-900/60 p-4">
+        <div className="shadow-block relative rounded-sm border border-neutral-800 bg-neutral-900/60 p-4">
           <div className="aspect-video w-full overflow-hidden rounded-xl bg-black">
             <video
               ref={videoRef}
@@ -402,7 +588,7 @@ export default function VideoRealtimeDemo() {
       <div className="col-span-12 md:col-span-5">
         {/* Metadata */}
         {metadata && (
-          <div className="rounded-2xl border border-neutral-800 bg-neutral-900/60 p-4 mb-4">
+          <div className="shadow-block rounded-sm border border-neutral-800 bg-neutral-900/60 p-4 mb-4">
             <div 
               className="flex items-center justify-between cursor-pointer"
               onClick={() => setExpandedVideoInfo(!expandedVideoInfo)}
@@ -432,7 +618,7 @@ export default function VideoRealtimeDemo() {
 
         {/* Summary */}
         {summary && (
-          <div className="rounded-2xl border border-neutral-800 bg-neutral-900/60 p-4 mb-4">
+          <div className="shadow-block rounded-sm border border-neutral-800 bg-neutral-900/60 p-4 mb-4">
             <h3 className="text-lg font-semibold mb-3">Tổng kết</h3>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
@@ -455,7 +641,7 @@ export default function VideoRealtimeDemo() {
 
         {/* Current Event */}
         {currentEvent && (
-          <div className="rounded-2xl border border-neutral-800 bg-neutral-900/60 p-4 mb-4">
+          <div className="shadow-block rounded-sm border border-neutral-800 bg-neutral-900/60 p-4 mb-4">
             <div 
               className="flex items-center justify-between cursor-pointer"
               onClick={() => setExpandedCurrentEvent(!expandedCurrentEvent)}
@@ -486,7 +672,7 @@ export default function VideoRealtimeDemo() {
                 </div>
                 
                 {currentEvent.taskA && (
-                  <div className="mt-3 rounded-lg bg-white/5 p-2">
+                  <div className="mt-3 rounded-sm bg-white/5 p-2">
                     <div className="text-xs font-semibold mb-1">Task A:</div>
                     <div className="text-xs text-neutral-300">
                       {currentEvent.taskA.pred_label} - {getTaskALabelDisplay(currentEvent.taskA.pred_label)} {currentEvent.taskA.suspicious ? "⚠️" : "✓"}
@@ -500,7 +686,7 @@ export default function VideoRealtimeDemo() {
                   const posClass = currentEvent.taskB.pos_class;
                   
                   return (
-                    <div className="mt-3 rounded-lg bg-white/5 p-2">
+                    <div className="mt-3 rounded-sm bg-white/5 p-2">
                       <div className="text-xs font-semibold mb-1">Task B:</div>
                       <div className={`text-xs ${
                         currentEvent.taskB.is_pos_thr 
@@ -526,7 +712,7 @@ export default function VideoRealtimeDemo() {
 
         {/* Events List */}
         {events.length > 0 && (
-          <div className="rounded-2xl border border-neutral-800 bg-neutral-900/60 p-4">
+          <div className="shadow-block rounded-sm border border-neutral-800 bg-neutral-900/60 p-4">
             <h3 className="text-md font-semibold mb-3">Events Timeline ({events.length})</h3>
             <div className="max-h-64 overflow-auto space-y-1">
               {events.map((event, idx) => (
@@ -608,7 +794,7 @@ export default function VideoRealtimeDemo() {
         )}
 
         {!processing && events.length === 0 && !summary && (
-          <div className="rounded-2xl border border-neutral-800 bg-neutral-900/60 p-4">
+          <div className="shadow-block rounded-sm border border-neutral-800 bg-neutral-900/60 p-4">
             <p className="text-sm text-neutral-400 text-center">
               Chọn video và bắt đầu xử lý để xem kết quả real-time
             </p>

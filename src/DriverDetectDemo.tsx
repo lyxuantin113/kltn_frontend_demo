@@ -114,7 +114,7 @@ export default function DriverDetectDemo() {
       <div
         onDrop={onDrop}
         onDragOver={(e) => e.preventDefault()}
-        className="relative max-w-7/12 w-full rounded-2xl border border-neutral-800 bg-neutral-900/60 p-6 transition hover:border-neutral-700"
+        className="relative max-w-7/12 w-full rounded-sm shadow-block border border-neutral-800 bg-neutral-900/60 p-6 transition hover:border-neutral-700"
       >
         <div className="flex flex-col items-center justify-center gap-4 text-center">
           {previewUrl ? (
@@ -174,14 +174,14 @@ export default function DriverDetectDemo() {
           <div className="flex items-center gap-3">
             <button
               onClick={onPick}
-              className="rounded-2xl bg-white/10 px-4 py-2 text-sm font-medium hover:bg-white/20 btn-hover-effect"
+              className="rounded-sm bg-white/10 px-4 py-2 text-sm font-medium hover:bg-white/20 btn-hover-effect"
             >
               Chọn ảnh
             </button>
             {file && (
               <button
                 onClick={clearSelection}
-                className="rounded-2xl bg-white/5 px-4 py-2 text-sm text-neutral-300 hover:bg-white/10 btn-hover-effect"
+                className="rounded-sm bg-white/5 px-4 py-2 text-sm text-neutral-300 hover:bg-white/10 btn-hover-effect"
               >
                 Xóa
               </button>
@@ -191,7 +191,7 @@ export default function DriverDetectDemo() {
         </div>
       </div>
 
-      <div className="rounded-2xl max-w-5/12 w-full border border-neutral-800 bg-neutral-900/60 p-5">
+      <div className="rounded-sm shadow-block max-w-5/12 w-full border border-neutral-800 bg-neutral-900/60 p-5">
         {/* Options */}
         <div className="mb-4 space-y-3">
           <div className="flex items-center gap-3">
@@ -231,7 +231,7 @@ export default function DriverDetectDemo() {
                 onChange={(e) => setRunTaskB(e.target.checked)}
                 className="rounded"
               />
-              <span>Task B (Nguy hiểm)</span>
+              <span>Task B (Nguy hiểm / Tấn công)</span>
             </label>
           </div>
        
@@ -258,7 +258,7 @@ export default function DriverDetectDemo() {
           <button
             disabled={!canSubmit || (!runTaskA && !runTaskB)}
             onClick={predict}
-            className={`rounded-2xl px-5 py-2 text-sm font-semibold btn-hover-effect ${
+            className={`rounded-sm px-5 py-2 text-sm font-semibold btn-hover-effect ${
               canSubmit && (runTaskA || runTaskB)
                 ? "bg-emerald-500 hover:bg-emerald-400 text-white"
                 : "bg-neutral-800 text-neutral-500 cursor-not-allowed"
