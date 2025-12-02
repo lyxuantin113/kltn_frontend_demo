@@ -234,6 +234,76 @@ export default function VideoRealtimeDemo() {
   }, [events, currentEventIdx]);
 
   return (
+    <div>
+      {/* Options - Luôn hiển thị để user có thể chọn trước */}
+        <div className="mt-4 rounded-2xl border border-neutral-800 bg-neutral-900/60 p-4">
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={runTaskA}
+                  onChange={(e) => setRunTaskA(e.target.checked)}
+                  className="rounded"
+                  disabled={processing}
+                />
+                <span>Task A (Mất tập trung)</span>
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={runTaskB}
+                  onChange={(e) => setRunTaskB(e.target.checked)}
+                  className="rounded"
+                  disabled={processing}
+                />
+                <span>Task B (Nguy hiểm)</span>
+              </label>
+            </div>
+            
+            {runTaskA && health && health.taskA_models.length > 0 && (
+              <div className="flex items-center gap-2 text-sm ml-6">
+                <span className="text-neutral-400">Task A Model:</span>
+                <select
+                  value={taskAName}
+                  onChange={(e) => setTaskAName(e.target.value)}
+                  className="rounded-lg bg-neutral-800 px-2 py-1 text-xs outline-none"
+                  disabled={processing}
+                >
+                  {health?.taskA_models.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {runTaskB && (
+              <div className="flex items-center gap-2 text-sm ml-6">
+                <span className="text-neutral-400">Task B Model:</span>
+                {health && health.taskB_models.length > 0 ? (
+                  <select
+                    value={taskBName}
+                    onChange={(e) => setTaskBName(e.target.value)}
+                    className="rounded-lg bg-neutral-800 px-2 py-1 text-xs outline-none"
+                    disabled={processing}
+                  >
+                    {health.taskB_models.map((name) => (
+                      <option key={name} value={name}>
+                        {name}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <span className="text-xs text-neutral-500">
+                    {health ? "Không có model nào" : "Đang tải..."}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
     <div className="grid grid-cols-12 gap-4">
       {/* LEFT: Video + Controls */}
       <div className="col-span-12 md:col-span-7">
@@ -286,7 +356,7 @@ export default function VideoRealtimeDemo() {
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <button
               onClick={onPickVideo}
-              className="rounded-2xl bg-white/10 px-4 py-2 text-sm font-medium hover:bg-white/20"
+              className="rounded-2xl bg-white/10 px-4 py-2 text-sm font-medium hover:bg-white/20 btn-hover-effect"
               disabled={processing}
             >
               Chọn video
@@ -304,14 +374,14 @@ export default function VideoRealtimeDemo() {
                 {!processing ? (
                   <button
                     onClick={startProcessing}
-                    className="rounded-2xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-400"
+                    className="rounded-2xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-400 btn-hover-effect"
                   >
                     Bắt đầu xử lý
                   </button>
                 ) : (
                   <button
                     onClick={stopProcessing}
-                    className="rounded-2xl bg-rose-500 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-400"
+                    className="rounded-2xl bg-rose-500 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-400 btn-hover-effect"
                   >
                     Dừng
                   </button>
@@ -325,74 +395,6 @@ export default function VideoRealtimeDemo() {
               {error}
             </div>
           )}
-        </div>
-
-        {/* Options - Luôn hiển thị để user có thể chọn trước */}
-        <div className="mt-4 rounded-2xl border border-neutral-800 bg-neutral-900/60 p-4">
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={runTaskA}
-                  onChange={(e) => setRunTaskA(e.target.checked)}
-                  className="rounded"
-                  disabled={processing}
-                />
-                <span>Task A (Mất tập trung)</span>
-              </label>
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={runTaskB}
-                  onChange={(e) => setRunTaskB(e.target.checked)}
-                  className="rounded"
-                  disabled={processing}
-                />
-                <span>Task B (Nguy hiểm)</span>
-              </label>
-            </div>
-            
-            {runTaskA && (
-              <div className="flex items-center gap-2 text-sm ml-6">
-                <span className="text-neutral-400">Task A Model:</span>
-                <select
-                  value={taskAName}
-                  onChange={(e) => setTaskAName(e.target.value)}
-                  className="rounded-lg bg-neutral-800 px-2 py-1 text-xs outline-none"
-                  disabled={processing}
-                >
-                  <option value="ResNet18">ResNet18 (Classification)</option>
-                  <option value="YOLOv8">YOLOv8 (Detection)</option>
-                  <option value="YOLOv11">YOLOv11 (Detection)</option>
-                </select>
-              </div>
-            )}
-
-            {runTaskB && (
-              <div className="flex items-center gap-2 text-sm ml-6">
-                <span className="text-neutral-400">Task B Model:</span>
-                {health && health.taskB_models.length > 0 ? (
-                  <select
-                    value={taskBName}
-                    onChange={(e) => setTaskBName(e.target.value)}
-                    className="rounded-lg bg-neutral-800 px-2 py-1 text-xs outline-none"
-                    disabled={processing}
-                  >
-                    {health.taskB_models.map((name) => (
-                      <option key={name} value={name}>
-                        {name}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <span className="text-xs text-neutral-500">
-                    {health ? "Không có model nào" : "Đang tải..."}
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
         </div>
       </div>
 
@@ -613,6 +615,7 @@ export default function VideoRealtimeDemo() {
           </div>
         )}
       </div>
+    </div>
     </div>
   );
 }

@@ -70,6 +70,7 @@ export type HealthResponse = {
   status: string;
   device: string;
   taskA_loaded: boolean;
+  taskA_models: string[];
   taskB_loaded: boolean;
   taskB_models: string[];
 };

@@ -22,74 +22,41 @@ const LABEL_COLORS: Record<string, string> = {
 };
 
 export default function DriverDetectDemo() {
-
   const inputRef = useRef<HTMLInputElement | null>(null);
-
   const [file, setFile] = useState<File | null>(null);
-
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-
   const [loading, setLoading] = useState(false);
-
   const [error, setError] = useState<string | null>(null);
-
   const [result, setResult] = useState<PredictImageResponse | null>(null);
-
   const [health, setHealth] = useState<HealthResponse | null>(null);
-  
+
   // Image dimensions for bounding boxes
   const [imgNaturalSize, setImgNaturalSize] = useState<{ w: number; h: number } | null>(null);
-
  
-
   // Options
-
   const [runTaskA, setRunTaskA] = useState(true);
-
   const [taskAName, setTaskAName] = useState("ResNet18");
-
   const [runTaskB, setRunTaskB] = useState(false);
-
   const [taskBName, setTaskBName] = useState("custom_cabin_attack");
 
-
-
   // Load health check và available Task B models
-
   useEffect(() => {
-
     checkHealth()
-
       .then(setHealth)
-
       .catch(() => {});
-
   }, []);
-
-
 
   const onPick = () => inputRef.current?.click();
 
-
-
   const onDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-
     e.preventDefault();
-
     const f = e.dataTransfer.files?.[0];
-
     if (f) handleFile(f);
-
   }, []);
 
-
-
   const handleFile = (f: File) => {
-
     if (!f.type.startsWith("image/")) {
-
       setError("Vui lòng chọn tệp ảnh (jpg/png)");
-
       return;
     }
 
@@ -105,13 +72,11 @@ export default function DriverDetectDemo() {
   };
 
   const canSubmit = useMemo(() => !!file && !loading, [file, loading]);
-
   const predict = async () => {
     if (!file) return;
     setLoading(true);
     setError(null);
     setResult(null);
-    setImgNaturalSize(null);
 
     try {
       const data = await predictImage(file, {
@@ -134,7 +99,6 @@ export default function DriverDetectDemo() {
     setPreviewUrl(null);
     setResult(null);
     setError(null);
-    setImgNaturalSize(null);
     if (inputRef.current) inputRef.current.value = "";
   };
 
@@ -210,14 +174,14 @@ export default function DriverDetectDemo() {
           <div className="flex items-center gap-3">
             <button
               onClick={onPick}
-              className="rounded-2xl bg-white/10 px-4 py-2 text-sm font-medium hover:bg-white/20"
+              className="rounded-2xl bg-white/10 px-4 py-2 text-sm font-medium hover:bg-white/20 btn-hover-effect"
             >
               Chọn ảnh
             </button>
             {file && (
               <button
                 onClick={clearSelection}
-                className="rounded-2xl bg-white/5 px-4 py-2 text-sm text-neutral-300 hover:bg-white/10"
+                className="rounded-2xl bg-white/5 px-4 py-2 text-sm text-neutral-300 hover:bg-white/10 btn-hover-effect"
               >
                 Xóa
               </button>
@@ -242,7 +206,7 @@ export default function DriverDetectDemo() {
             </label>
           </div>
 
-          {runTaskA && (
+          {runTaskA && health && health.taskA_models.length > 0 && (
             <div className="flex items-center gap-2 text-sm ml-6 mb-2">
               <span className="text-neutral-400">Task A Model:</span>
               <select
@@ -250,9 +214,11 @@ export default function DriverDetectDemo() {
                 onChange={(e) => setTaskAName(e.target.value)}
                 className="rounded-lg bg-neutral-800 px-2 py-1 text-xs outline-none"
               >
-                <option value="ResNet18">ResNet18 (Classification)</option>
-                <option value="YOLOv8">YOLOv8 (Detection)</option>
-                <option value="YOLOv11">YOLOv11 (Detection)</option>
+                {health?.taskA_models.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
               </select>
             </div>
           )}
@@ -292,7 +258,7 @@ export default function DriverDetectDemo() {
           <button
             disabled={!canSubmit || (!runTaskA && !runTaskB)}
             onClick={predict}
-            className={`rounded-2xl px-5 py-2 text-sm font-semibold transition ${
+            className={`rounded-2xl px-5 py-2 text-sm font-semibold btn-hover-effect ${
               canSubmit && (runTaskA || runTaskB)
                 ? "bg-emerald-500 hover:bg-emerald-400 text-white"
                 : "bg-neutral-800 text-neutral-500 cursor-not-allowed"
