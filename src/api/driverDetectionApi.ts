@@ -138,7 +138,7 @@ export async function predictImage(
 ): Promise<PredictImageResponse> {
   const {
     run_taskA = true,
-    model_name_A = "ResNet18",
+    model_name_A = "ResNet50",
     run_taskB = false,
     run_both = false,
     taskB_name = "custom_cabin_attack",
@@ -196,7 +196,9 @@ export function predictVideoSSE(
     distraction_cooldown_seconds?: number;
     yolo_conf?: number;
     suspicious_window?: number;
-    suspicious_ratio?: number;
+    suspicious_thresh_ratio?: number;
+    taskB_suspicious_ratio?: number;
+    taskB_detected_ratio?: number;
     attack_cooldown_seconds?: number;
   } = {},
   onEvent: (event: StreamEvent) => void,
@@ -204,7 +206,7 @@ export function predictVideoSSE(
 ): AbortController {
   const {
     run_taskA = true,
-    model_name_A = "ResNet18",
+    model_name_A = "ResNet50",
     run_taskB = true,
     taskB_name = "custom_cabin_attack",
     stage1_stride = 16,
@@ -214,7 +216,9 @@ export function predictVideoSSE(
     distraction_cooldown_seconds = 3.0,
     yolo_conf = 0.5,
     suspicious_window = 5,
-    suspicious_ratio = 0.8,
+    suspicious_thresh_ratio = 0.8,
+    taskB_suspicious_ratio = 0.8,
+    taskB_detected_ratio = 0.5,
     attack_cooldown_seconds = 2.0,
   } = options;
 
@@ -235,7 +239,9 @@ export function predictVideoSSE(
   params.append("distraction_cooldown_seconds", String(distraction_cooldown_seconds));
   params.append("yolo_conf", String(yolo_conf));
   params.append("suspicious_window", String(suspicious_window));
-  params.append("suspicious_ratio", String(suspicious_ratio));
+  params.append("suspicious_thresh_ratio", String(suspicious_thresh_ratio));
+  params.append("taskB_suspicious_ratio", String(taskB_suspicious_ratio));
+  params.append("taskB_detected_ratio", String(taskB_detected_ratio));
   params.append("attack_cooldown_seconds", String(attack_cooldown_seconds));
 
   const url = `${API_URL}/predict_video_stream_sse?${params.toString()}`;
@@ -294,4 +300,3 @@ export function predictVideoSSE(
 
   return abortController;
 }
-

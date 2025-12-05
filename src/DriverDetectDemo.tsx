@@ -35,7 +35,7 @@ export default function DriverDetectDemo() {
  
   // Options
   const [runTaskA, setRunTaskA] = useState(true);
-  const [taskAName, setTaskAName] = useState("ResNet18");
+  const [taskAName, setTaskAName] = useState("ResNet50");
   const [runTaskB, setRunTaskB] = useState(false);
   const [taskBName, setTaskBName] = useState("custom_cabin_attack");
 

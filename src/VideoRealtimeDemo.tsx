@@ -19,7 +19,7 @@ export default function VideoRealtimeDemo() {
   
   // Options
   const [runTaskA, setRunTaskA] = useState(true);
-  const [taskAName, setTaskAName] = useState("ResNet18"); // Default model
+  const [taskAName, setTaskAName] = useState("ResNet50"); // Default model
   const [runTaskB, setRunTaskB] = useState(true);
   const [taskBName, setTaskBName] = useState("custom_cabin_attack");
   
@@ -35,7 +35,9 @@ export default function VideoRealtimeDemo() {
   
   // Task B Config
   const [suspiciousWindow, setSuspiciousWindow] = useState(5);
-  const [suspiciousRatio, setSuspiciousRatio] = useState(0.8);
+  const [suspiciousThreshRatio, setSuspiciousThreshRatio] = useState(0.8);
+  const [taskBSuspiciousRatio, setTaskBSuspiciousRatio] = useState(0.8);
+  const [taskBDetectedRatio, setTaskBDetectedRatio] = useState(0.5);
   const [attackCooldown, setAttackCooldown] = useState(2.0);
   
   // Stream data
@@ -167,7 +169,9 @@ export default function VideoRealtimeDemo() {
         distraction_cooldown_seconds: distractionCooldown,
         yolo_conf: yoloConf,
         suspicious_window: suspiciousWindow,
-        suspicious_ratio: suspiciousRatio,
+        suspicious_thresh_ratio: suspiciousThreshRatio,
+        taskB_suspicious_ratio: taskBSuspiciousRatio,
+        taskB_detected_ratio: taskBDetectedRatio,
         attack_cooldown_seconds: attackCooldown,
       },
       (event: StreamEvent) => {
@@ -281,7 +285,9 @@ export default function VideoRealtimeDemo() {
                 <h4 className="text-xs font-medium text-blue-400 mb-2">Chung (Task A & B)</h4>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs text-neutral-400 mb-1">Stage 1 Stride (Thưa)</label>
+                    <label className="block text-xs text-neutral-400 mb-1" title="Khoảng cách giữa các frame được xử lý ở giai đoạn 1 (bình thường)">
+                      Stage 1 Stride (Thưa)
+                    </label>
                     <input 
                       type="number" 
                       value={stage1Stride}
@@ -291,7 +297,9 @@ export default function VideoRealtimeDemo() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-neutral-400 mb-1">Stage 2 Stride (Dày)</label>
+                    <label className="block text-xs text-neutral-400 mb-1" title="Khoảng cách giữa các frame được xử lý ở giai đoạn 2 (khi phát hiện nghi vấn)">
+                      Stage 2 Stride (Dày)
+                    </label>
                     <input 
                       type="number" 
                       value={stage2Stride}
@@ -309,7 +317,9 @@ export default function VideoRealtimeDemo() {
                   <h4 className="text-xs font-medium text-orange-400 mb-2">Task A (Mất tập trung)</h4>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs text-neutral-400 mb-1">Suspicious Prob Thr</label>
+                      <label className="block text-xs text-neutral-400 mb-1" title="Ngưỡng xác suất để coi là nghi vấn (suspicious)">
+                        Suspicious Prob Thr (Ngưỡng nghi vấn)
+                      </label>
                       <input 
                         type="number" 
                         step="0.1"
@@ -322,7 +332,9 @@ export default function VideoRealtimeDemo() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-neutral-400 mb-1">Distraction Ratio</label>
+                      <label className="block text-xs text-neutral-400 mb-1" title="Tỷ lệ frame nghi vấn trong cửa sổ để cảnh báo mất tập trung">
+                        Distraction Ratio (Tỷ lệ cảnh báo)
+                      </label>
                       <input 
                         type="number" 
                         step="0.1"
@@ -335,7 +347,9 @@ export default function VideoRealtimeDemo() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-neutral-400 mb-1">Cooldown (s)</label>
+                      <label className="block text-xs text-neutral-400 mb-1" title="Thời gian chờ giữa 2 lần cảnh báo liên tiếp">
+                        Cooldown (s)
+                      </label>
                       <input 
                         type="number" 
                         step="0.5"
@@ -368,7 +382,9 @@ export default function VideoRealtimeDemo() {
                   <h4 className="text-xs font-medium text-red-400 mb-2">Task B (Nguy hiểm / Tấn công)</h4>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs text-neutral-400 mb-1">Suspicious Window</label>
+                      <label className="block text-xs text-neutral-400 mb-1" title="Số lượng frame trong cửa sổ trượt để tính toán tỷ lệ">
+                        Suspicious Window (Cửa sổ trượt)
+                      </label>
                       <input 
                         type="number" 
                         value={suspiciousWindow}
@@ -378,20 +394,54 @@ export default function VideoRealtimeDemo() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-neutral-400 mb-1">Suspicious Ratio</label>
+                      <label className="block text-xs text-neutral-400 mb-1" title="Hệ số nhân với ngưỡng tốt nhất (Best Thr) để xác định nghi vấn. Công thức: Thr_nghi_vấn = Best_Thr * Ratio">
+                        Suspicious Thresh Ratio (Hệ số nghi vấn)
+                      </label>
                       <input 
                         type="number" 
                         step="0.1"
-                        value={suspiciousRatio}
+                        value={suspiciousThreshRatio}
                         min="0"
-                        max="1"
-                        onChange={(e) => setSuspiciousRatio(Number(e.target.value))}
+                        max="2"
+                        onChange={(e) => setSuspiciousThreshRatio(Number(e.target.value))}
                         className="w-full bg-neutral-800 border border-neutral-700 rounded px-2 py-1 text-xs text-white"
                         disabled={processing}
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-neutral-400 mb-1">Cooldown (s)</label>
+                      <label className="block text-xs text-neutral-400 mb-1" title="Tỷ lệ frame nghi vấn cần thiết để kích hoạt cảnh báo. Công thức: Số_frame_nghi_vấn / Window >= Ratio">
+                        Task B Suspicious Ratio (Tỷ lệ nghi vấn)
+                      </label>
+                      <input 
+                        type="number" 
+                        step="0.1"
+                        value={taskBSuspiciousRatio}
+                        min="0"
+                        max="1"
+                        onChange={(e) => setTaskBSuspiciousRatio(Number(e.target.value))}
+                        className="w-full bg-neutral-800 border border-neutral-700 rounded px-2 py-1 text-xs text-white"
+                        disabled={processing}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-neutral-400 mb-1" title="Tỷ lệ frame phát hiện (vượt ngưỡng Best Thr) cần thiết để kích hoạt cảnh báo. Công thức: Số_frame_phát_hiện / Window >= Ratio">
+                        Task B Detected Ratio (Tỷ lệ phát hiện)
+                      </label>
+                      <input 
+                        type="number" 
+                        step="0.1"
+                        value={taskBDetectedRatio}
+                        min="0"
+                        max="1"
+                        onChange={(e) => setTaskBDetectedRatio(Number(e.target.value))}
+                        className="w-full bg-neutral-800 border border-neutral-700 rounded px-2 py-1 text-xs text-white"
+                        disabled={processing}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-neutral-400 mb-1" title="Thời gian chờ giữa 2 lần cảnh báo liên tiếp">
+                        Cooldown (s)
+                      </label>
                       <input 
                         type="number" 
                         step="0.5"
